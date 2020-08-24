@@ -89,7 +89,7 @@ def worker2(queue_a,queue_b,event_quit):
             center_coordi = (len(img[0])//2, len(img)//2)
             radius = min(len(img), len(img[0]))//4
             cv2.circle(img, center_coordi, radius, complement_color, -11)
-            cv2.putText(img, color_map[(img[0,0][0], img[0,0][1], img[0,0][2])], (0, len(img[0])//2),
+            cv2.putText(img, color_map[(img[0,0][0], img[0,0][1], img[0,0][2])], (0, len(img[0])//8),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, complement_color, 2)
 
             queue_b.put(img)
@@ -130,9 +130,9 @@ if __name__ == '__main__':
     queue_a = multiprocessing.Queue()
     queue_b = multiprocessing.Queue()
 
-    width = multiprocessing.Value('i', 500)
-    height= multiprocessing.Value('i', 500)
-    num_images = multiprocessing.Value('i', 8)
+    width = multiprocessing.Value('i', int(input("Enter the width of images")))
+    height= multiprocessing.Value('i', int(input("Enter the height of images")))
+    num_images = multiprocessing.Value('i', int(input("Enter the number of images")))
     hit_counter = 0
 
     array_a = multiprocessing.Array('i', width.value * height.value * 3)
