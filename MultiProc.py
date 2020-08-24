@@ -118,7 +118,7 @@ def worker3(q,e,width,height, event):
 
             e.clear()
 
-            a = list(q)
+            a = list(q[:])
             a = np.reshape(a, (height.value, width.value, 3))
             Image.fromarray(np.uint8(a), 'RGB').show()
 
@@ -130,8 +130,8 @@ if __name__ == '__main__':
     queue2 = multiprocessing.Queue()
     queue3 = multiprocessing.Queue()
 
-    width = multiprocessing.Value('i',100)
-    height= multiprocessing.Value('i',100)
+    width = multiprocessing.Value('i',500)
+    height= multiprocessing.Value('i',500)
     num_images = multiprocessing.Value('i',2)
     img_counter= 0
 
@@ -164,8 +164,7 @@ if __name__ == '__main__':
         arr = queue2.get()
         arr = list(arr.flatten())
 
-        for i in range(len(arr)):
-            raw_arr[i] = arr[i]
+        raw_arr[:len(arr)] = arr
 
         img_counter += 1
 
