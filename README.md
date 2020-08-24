@@ -157,6 +157,11 @@ def worker3(array_a, width, height, event_array_updated, event_quit):
 
 ## Sample Output
 
+![alt text] (https://github.com/kedar2017/venv1/blob/master/Sample_1.png)
+
+![alt text] (https://github.com/kedar2017/venv1/blob/master/Sample_2.png)
+
+
 ## Unit Testing
 
 Hit the following in the file to run the tests
