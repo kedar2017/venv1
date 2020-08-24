@@ -79,16 +79,19 @@ def worker2(q1,q2,event):
     while True:
 
         if event.is_set():
+
             break
 
-        obj = q1.get()
-        complement_color = complement(obj[0,0][0],obj[0,0][1],obj[0,0][2])
-        center_coordi = (len(obj[0])//2,len(obj)//2)
-        radius = min(len(obj),len(obj[0]))//4
-        cv2.circle(obj, center_coordi, radius, complement_color, -11)
-        cv2.putText(obj, color_map[(obj[0,0][0],obj[0,0][1],obj[0,0][2])], center_coordi,
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-        q2.put(obj)
+        if not q1.empty():
+
+            obj = q1.get()
+            complement_color = complement(obj[0,0][0],obj[0,0][1],obj[0,0][2])
+            center_coordi = (len(obj[0])//2,len(obj)//2)
+            radius = min(len(obj),len(obj[0]))//4
+            cv2.circle(obj, center_coordi, radius, complement_color, -11)
+            cv2.putText(obj, color_map[(obj[0,0][0],obj[0,0][1],obj[0,0][2])], center_coordi,
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+            q2.put(obj)
 
     return
 
@@ -108,14 +111,16 @@ def worker3(q,e,width,height, event):
     while True:
 
         if event.is_set():
+
             break
 
-        e.wait()
-        e.clear()
+        if e.is_set():
 
-        a = list(q)
-        a = np.reshape(a, (height.value, width.value, 3))
-        Image.fromarray(np.uint8(a), 'RGB').show()
+            e.clear()
+
+            a = list(q)
+            a = np.reshape(a, (height.value, width.value, 3))
+            Image.fromarray(np.uint8(a), 'RGB').show()
 
     return
 
@@ -127,7 +132,8 @@ if __name__ == '__main__':
 
     width = multiprocessing.Value('i',100)
     height= multiprocessing.Value('i',100)
-    num_images = multiprocessing.Value('i',10)
+    num_images = multiprocessing.Value('i',2)
+    img_counter= 0
 
     raw_arr = multiprocessing.Array('i',width.value*height.value*3)
 
@@ -145,22 +151,23 @@ if __name__ == '__main__':
 
     while True:
 
-        '''
 
-        inp = input("Press <ENTER> for next image or press exit")
+        inp = input("Press <ENTER> for next image or press END")
 
-        if inp == "exit":
+        if inp == "END" or img_counter == num_images.value:
 
             event_quit.set()
 
             break
-        '''
+
 
         arr = queue2.get()
         arr = list(arr.flatten())
 
         for i in range(len(arr)):
             raw_arr[i] = arr[i]
+
+        img_counter += 1
 
         e.set()
 
@@ -173,8 +180,6 @@ if __name__ == '__main__':
     queue2.join_thread()
     p2.join()
 
-    raw_arr.close()
-    raw_arr.join_thread()
     p3.join()
 
     sys.exit(0)
