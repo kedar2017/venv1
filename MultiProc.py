@@ -1,11 +1,8 @@
 import multiprocessing
 import numpy as np
-from multiprocessing.sharedctypes import RawArray
 from PIL import Image
 import random
 import cv2
-import ctypes
-from copy import deepcopy
 import sys
 
 color_chart = [[0,0,0],[255,255,255],[255,0,0],[255,255,0],[0,255,0],[0,255,255],[0,0,255],[255,0,255]]
