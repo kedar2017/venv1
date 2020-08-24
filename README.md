@@ -47,7 +47,7 @@ def worker1(queue_a, width, height, num_images):
 
 1. Generates the random number and picks up the color from the chart as per the index
 2. Generates a numpy array with zeroes and height/width as specified by user. The third dimension is always 3 since this is  RGB regime
-3. We fill the numpy array with the corresponding selected color value. The image is then transferred over to the queueA
+3. We fill the numpy array with the corresponding selected color value. The image is then transferred over to the **queueA**
 
 
 **Process# 2**
@@ -78,13 +78,13 @@ def worker2(queue_a,queue_b,event_quit):
     return
 ```
 
-1. If the queueA is filled with even a single element, this process picks it up
-2. IT first determines what color is the original picked image from queueA
+1. If the **queueA** is filled with even a single element, this process picks it up
+2. It first determines what color is the original picked image from **queueA**
 3. Then determines the corresponding complementary color using the function complementary(r,b,g)
 4. According to the complementary color, it draws a circle of that same color at the center
-5. IT then puts the corresponding color as a watermark at a certain location on the modified image
-6. This image is then placed on a queueB
-7. Note that the process also checks for the event_quit signal for when we want to forcefully stop all the processes and exit
+5. It then puts the corresponding color as a watermark at a certain location on the modified image
+6. This image is then placed on a **queueB**
+7. Note that the process also checks for the **event_quit** signal for when we want to forcefully stop all the processes and exit
 
 
 **Process# 3**
@@ -110,10 +110,10 @@ def worker3(array_a, width, height, event_array_updated, event_quit):
 
 ```
 
-1. Whenever the main application signals that the arrayA has been updated through 'event_array_updated', this process simply picks up the image from the updated array
+1. Whenever the main application signals that the **arrayA** has been updated through **event_array_updated**, this process simply picks up the image from the updated array
 2. The array is then reshaped to the appropriate shape using numpy function
 3. The resulting image is then displayed using PIL function ***Image.fromarray()***
-4. Note that even this function checks for 'event_quit' signal from the main application to stop all the processes and exit
+4. Note that even this function checks for **event_quit** signal from the main application to stop all the processes and exit
 
 
 **Main Application**
@@ -150,9 +150,9 @@ def worker3(array_a, width, height, event_array_updated, event_quit):
         event_array_updated.set()
 ```
 
-2. Since we have already started the processes, the process# 1 has already started generating the images and putting them onto the queueA
-3. And process# 2 has also started picking up these images, processing them and putting them onto the queueB
-4. Here the main application waits for the user input and if he has asked for the next image, main application simply puts the available image from queueB onto the array
+2. Since we have already started the processes, the **process# 1** has already started generating the images and putting them onto the **queueA**
+3. And **process# 2** has also started picking up these images, processing them and putting them onto the **queueB**
+4. Here the main application waits for the user input and if he has asked for the next image, main application simply puts the available image from **queueB** onto the array
 5. It then initiates the process# 3 to pick the image from this array and display it
 
 ## Sample Output
