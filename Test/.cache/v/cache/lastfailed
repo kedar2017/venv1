@@ -1,4 +1,3 @@
 {
-  "test_YOUR_SCRIPT.py::test_file1_method1": true,
-  "test_YOUR_SCRIPT.py::test_file1_method2": true
+  "test_YOUR_SCRIPT.py": true
 }

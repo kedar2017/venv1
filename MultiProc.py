@@ -40,7 +40,7 @@ def complement(r, g, b):
     k = hilo(r, g, b)
     return tuple(k - u for u in (r, g, b))
 
-def worker1(queue_a, width, height, event_start, event_quit):
+def worker1(queue_a, width, height, num_images):
 
     '''
     Generates an RGB image of a random color from a given list of colors
@@ -53,20 +53,12 @@ def worker1(queue_a, width, height, event_start, event_quit):
     :return:
     '''
 
-    while True:
+    for i in range(num_images.value):
 
-        if event_start.is_set():
-
-            color = color_chart[random.randrange(1,len(color_chart))]
-            img = np.zeros([height.value, width.value, 3], dtype=np.uint8)
-            img[:,:] = color
-            queue_a.put(img)
-
-            event_start.clear()
-
-        if event_quit.is_set():
-
-            break
+        color = color_chart[random.randrange(1, len(color_chart))]
+        img = np.zeros([height.value, width.value, 3], dtype=np.uint8)
+        img[:, :] = color
+        queue_a.put(img)
 
     return
 
@@ -97,8 +89,8 @@ def worker2(queue_a,queue_b,event_quit):
             center_coordi = (len(img[0])//2, len(img)//2)
             radius = min(len(img), len(img[0]))//4
             cv2.circle(img, center_coordi, radius, complement_color, -11)
-            cv2.putText(img, color_map[(img[0,0][0], img[0,0][1], img[0,0][2])], center_coordi,
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+            cv2.putText(img, color_map[(img[0,0][0], img[0,0][1], img[0,0][2])], (0, len(img[0])//2),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, complement_color, 2)
 
             queue_b.put(img)
 
@@ -140,7 +132,7 @@ if __name__ == '__main__':
 
     width = multiprocessing.Value('i', 500)
     height= multiprocessing.Value('i', 500)
-    num_images = multiprocessing.Value('i', 7)
+    num_images = multiprocessing.Value('i', 8)
     hit_counter = 0
 
     array_a = multiprocessing.Array('i', width.value * height.value * 3)
@@ -149,7 +141,7 @@ if __name__ == '__main__':
     event_quit = multiprocessing.Event()
     event_start = multiprocessing.Event()
 
-    p1 = multiprocessing.Process(target= worker1, args=(queue_a, width, height, event_start, event_quit))
+    p1 = multiprocessing.Process(target= worker1, args=(queue_a, width, height, num_images,))
     p1.start()
 
     p2 = multiprocessing.Process(target= worker2, args=(queue_a, queue_b, event_quit,))
@@ -167,17 +159,16 @@ if __name__ == '__main__':
 
             event_quit.set()
 
+            while not queue_b.empty():
+
+               a = queue_b.get()
+
             break
-
-        if hit_counter == 0:
-
-            event_start.set()
 
         event_start.set()
 
         img = queue_b.get()
         arr = list(img.flatten())
-
         array_a[:len(arr)] = arr
 
         hit_counter += 1
