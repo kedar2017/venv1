@@ -16,9 +16,9 @@ def hilo(a, b, c):
 
     '''
     Returns the median RBG value on the color map between the given color and it's complementary
-    :param a:
-    :param b:
-    :param c:
+    :param a: Red component
+    :param b: Green component
+    :param c: Blue component
     :return:
     '''
 
@@ -31,9 +31,9 @@ def complement(r, g, b):
 
     '''
     Returns the complementary color for the input color
-    :param r:
-    :param g:
-    :param b:
+    :param r: Red component
+    :param g: Green component
+    :param b: Blue component
     :return:
     '''
 
@@ -45,11 +45,10 @@ def worker1(queue_a, width, height, num_images):
     '''
     Generates an RGB image of a random color from a given list of colors
     Stores the resulting image on a queueA
-    :param q1:
-    :param width:
-    :param height:
-    :param num_images:
-    :param event:
+    :param queue_a: Output queue for process# 1 where initial images are generated
+    :param width: Width of the image
+    :param height: Height of the image
+    :param num_images: Number of total images to be generated as provided by the user
     :return:
     '''
 
@@ -68,10 +67,9 @@ def worker2(queue_a,queue_b,event_quit):
     Picks an image from the queueA. Determines the color of the image.
     Paints a circular region at the center with color complimentary to that of the input image. Adds watermark corresponding to that image color
     Adds the resulting image onto the queueB
-
-    :param q1:
-    :param q2:
-    :param event:
+    :param queue_a: Queue for getting inputs from process# 1
+    :param queue_b: Queue for outputting from process# 2
+    :param event_quit: Event call to signal program completion for all the processes
     :return:
     '''
 
@@ -101,11 +99,11 @@ def worker3(array_a, width, height, event_array_updated, event_quit):
     '''
     Waits for the arrayA buffer to update. As soon as there is an update, it picks up the image and displays it
 
-    :param q:
-    :param e:
-    :param width:
-    :param height:
-    :param event:
+    :param array_a: Array that gets updated from the main application with the latest image to be displayed
+    :param width: Width of the image
+    :param height: Height of the image
+    :param event_array_updated: Event call for when the array gets filled up with the latest image
+    :param event_quit: Event call to signal program completion for all the processes
     :return:
     '''
 
