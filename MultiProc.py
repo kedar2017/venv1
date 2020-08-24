@@ -235,7 +235,7 @@ if __name__ == '__main__':
 
             while not queue_b.empty():
 
-               a = queue_b.get()
+                a = queue_b.get()
 
             break
 
@@ -256,6 +256,7 @@ if __name__ == '__main__':
 
     queue_b.close()
     queue_b.join_thread()
+
     p2.join()
 
     p3.join()
