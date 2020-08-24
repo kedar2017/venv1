@@ -178,11 +178,11 @@ Below shows the sample output generated
 ============================= test session starts ==============================
 platform darwin -- Python 3.7.4, pytest-2.9.1, py-1.9.0, pluggy-0.3.1
 rootdir: /Users/kedjoshi/Desktop/venv, inifile:
-collected 4 items
+collected 7 items
 
-test_YOUR_SCRIPT.py ....
+test_YOUR_SCRIPT.py .......
 
-=========================== 4 passed in 1.10 seconds ===========================
+=========================== 7 passed in 0.43 seconds ===========================
 
 
 

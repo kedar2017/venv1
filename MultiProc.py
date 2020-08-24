@@ -12,6 +12,81 @@ color_chart = [[0,0,0],[255,255,255],[255,0,0],[255,255,0],[0,255,0],[0,255,255]
 color_names = ['Black', 'White', 'Red', 'Yellow', 'Lime', 'Aqua', 'Blue', 'Fuschia']
 color_map = {(0,0,0):'Black',(255,255,255):'White',(255,0,0):'Red',(255,255,0):'Yellow',(0,255,0):'Lime',(0,255,255):'Aqua',(0,0,255):'Blue',(255,0,255):'Fuschia'}
 
+def get_user_width():
+
+    '''
+    Asks for user input on the width. Remember that the width has to be 100 at a minimum
+    :return:
+    '''
+
+    while True:
+        width = input("Enter the width for images (Min 100)")
+
+        try:
+
+            width = int(width)
+
+            if width >= 100:
+                break
+
+            else:
+                print("Width can't be lesser than 100")
+
+        except ValueError:
+            print("Width must be a number, try again")
+
+    return width
+
+def get_user_height():
+
+    '''
+    Asks for user input on the height. Remember that the height has to be 100 at a minimum
+    :return:
+    '''
+
+    while True:
+        height = input("Enter the height for images (Min 100)")
+
+        try:
+
+            height = int(height)
+
+            if height >= 100:
+                break
+
+            else:
+                print("Height can't be lesser than 100")
+
+        except ValueError:
+            print("Height must be a number, try again")
+
+    return height
+
+def get_user_num_images():
+
+    '''
+    Asks for user input on the num of images. Remember that the number has to be 1 at a minimum
+    :return:
+    '''
+
+    while True:
+        num_images = input("Enter the number of images")
+
+        try:
+
+            num_images = int(num_images)
+
+            if num_images >= 1:
+                break
+
+            else:
+                print("Number of images can't be lesser than 1")
+
+        except ValueError:
+            print("Number of images must be a number, try again")
+
+    return num_images
+
 def hilo(a, b, c):
 
     '''
@@ -128,9 +203,13 @@ if __name__ == '__main__':
     queue_a = multiprocessing.Queue()
     queue_b = multiprocessing.Queue()
 
-    width = multiprocessing.Value('i', int(input("Enter the width of images")))
-    height= multiprocessing.Value('i', int(input("Enter the height of images")))
-    num_images = multiprocessing.Value('i', int(input("Enter the number of images")))
+    inp_width = get_user_width()
+    inp_height= get_user_height()
+    inp_num = get_user_num_images()
+
+    width = multiprocessing.Value('i', inp_width)
+    height= multiprocessing.Value('i', inp_height)
+    num_images = multiprocessing.Value('i', inp_num)
     hit_counter = 0
 
     array_a = multiprocessing.Array('i', width.value * height.value * 3)

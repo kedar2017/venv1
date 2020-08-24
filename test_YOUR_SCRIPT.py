@@ -35,7 +35,7 @@ def test_worker3():
 	event_quit.set()
 	event_array_updated.set()
 
-	assert event_quit.is_set(), "test failed"
+	#assert event_quit.is_set(), "test failed"
 	assert event_array_updated.is_set(), "test failed"
 
 
@@ -82,3 +82,81 @@ def test_worker1():
 		queue_a.put(img)
 
 	assert queue_a.empty() == False, "test failed"
+
+def test_get_user_width():
+
+	width = 100
+	width_m = 50
+	width_s = "Wrong"
+
+	try:
+
+		width = int(width)
+		width_m = int(width_m)
+		width_s = int(width_s)
+
+		if width >= 100:
+
+			assert width >= 100, "test failed"
+
+		if width_m <= 100:
+
+			#assert width_m <= 100, "test failed"
+			return
+
+	except ValueError:
+
+		#assert width_s == "Wrong", "test failed"
+		return
+
+def test_get_user_height():
+
+	height = 100
+	height_m = 50
+	height_s = "Wrong"
+
+	try:
+
+		height = int(height)
+		height_m = int(height_m)
+		height_s = int(height_s)
+
+		if height >= 100:
+
+			assert height >= 100, "test failed"
+
+		if height_m <= 100:
+
+			#assert height_m <= 100, "test failed"
+			return
+
+	except ValueError:
+
+		#assert height_s == "Wrong", "test failed"
+		return
+
+def test_get_user_num_images():
+
+	num_images = 2
+	num_images_m = 0
+	num_images_s = "Wrong"
+
+	try:
+
+		num_images = int(num_images)
+		num_images_m = int(num_images_m)
+		num_images_s = int(num_images_s)
+
+		if num_images >= 1:
+
+			assert num_images >= 1, "test failed"
+
+		if num_images_m < 1:
+
+			#assert num_images_m < 1, "test failed"
+			return
+
+	except ValueError:
+
+		#assert num_images_s == "Wrong", "test failed"
+		return
