@@ -40,7 +40,7 @@ def complement(r, g, b):
     k = hilo(r, g, b)
     return tuple(k - u for u in (r, g, b))
 
-def worker1(q1, width, height, num_images, event):
+def worker1(queue_a, width, height, event_start, event_quit):
 
     '''
     Generates an RGB image of a random color from a given list of colors
@@ -53,17 +53,24 @@ def worker1(q1, width, height, num_images, event):
     :return:
     '''
 
-    for i in range(num_images.value):
-        color = color_chart[random.randrange(1,len(color_chart))]
-        array = np.zeros([height.value, width.value, 3], dtype=np.uint8)
-        array[:,:] = color
-        q1.put(array)
+    while True:
 
-    event.wait()
+        if event_start.is_set():
+
+            color = color_chart[random.randrange(1,len(color_chart))]
+            img = np.zeros([height.value, width.value, 3], dtype=np.uint8)
+            img[:,:] = color
+            queue_a.put(img)
+
+            event_start.clear()
+
+        if event_quit.is_set():
+
+            break
 
     return
 
-def worker2(q1,q2,event):
+def worker2(queue_a,queue_b,event_quit):
 
     '''
     Picks an image from the queueA. Determines the color of the image.
@@ -78,24 +85,26 @@ def worker2(q1,q2,event):
 
     while True:
 
-        if event.is_set():
+        if event_quit.is_set():
 
             break
 
-        if not q1.empty():
+        if not queue_a.empty():
 
-            obj = q1.get()
-            complement_color = complement(obj[0,0][0],obj[0,0][1],obj[0,0][2])
-            center_coordi = (len(obj[0])//2,len(obj)//2)
-            radius = min(len(obj),len(obj[0]))//4
-            cv2.circle(obj, center_coordi, radius, complement_color, -11)
-            cv2.putText(obj, color_map[(obj[0,0][0],obj[0,0][1],obj[0,0][2])], center_coordi,
+            img = queue_a.get()
+
+            complement_color = complement(img[0,0][0], img[0,0][1], img[0,0][2])
+            center_coordi = (len(img[0])//2, len(img)//2)
+            radius = min(len(img), len(img[0]))//4
+            cv2.circle(img, center_coordi, radius, complement_color, -11)
+            cv2.putText(img, color_map[(img[0,0][0], img[0,0][1], img[0,0][2])], center_coordi,
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-            q2.put(obj)
+
+            queue_b.put(img)
 
     return
 
-def worker3(q,e,width,height, event):
+def worker3(array_a, width, height, event_array_updated, event_quit):
 
     '''
     Waits for the arrayA buffer to update. As soon as there is an update, it picks up the image and displays it
@@ -110,73 +119,78 @@ def worker3(q,e,width,height, event):
 
     while True:
 
-        if event.is_set():
+        if event_quit.is_set():
 
             break
 
-        if e.is_set():
+        if event_array_updated.is_set():
 
-            e.clear()
+            event_array_updated.clear()
 
-            a = list(q[:])
-            a = np.reshape(a, (height.value, width.value, 3))
-            Image.fromarray(np.uint8(a), 'RGB').show()
+            arr = list(array_a[:])
+            arr = np.reshape(arr, (height.value, width.value, 3))
+            Image.fromarray(np.uint8(arr), 'RGB').show()
 
     return
 
 if __name__ == '__main__':
 
-    queue1 = multiprocessing.Queue()
-    queue2 = multiprocessing.Queue()
-    queue3 = multiprocessing.Queue()
+    queue_a = multiprocessing.Queue()
+    queue_b = multiprocessing.Queue()
 
-    width = multiprocessing.Value('i',500)
-    height= multiprocessing.Value('i',500)
-    num_images = multiprocessing.Value('i',2)
-    img_counter= 0
+    width = multiprocessing.Value('i', 500)
+    height= multiprocessing.Value('i', 500)
+    num_images = multiprocessing.Value('i', 7)
+    hit_counter = 0
 
-    raw_arr = multiprocessing.Array('i',width.value*height.value*3)
+    array_a = multiprocessing.Array('i', width.value * height.value * 3)
 
-    e = multiprocessing.Event()
+    event_array_updated = multiprocessing.Event()
     event_quit = multiprocessing.Event()
+    event_start = multiprocessing.Event()
 
-    p1 = multiprocessing.Process(target=worker1, args=(queue1,width,height,num_images,event_quit,))
+    p1 = multiprocessing.Process(target= worker1, args=(queue_a, width, height, event_start, event_quit))
     p1.start()
 
-    p2 = multiprocessing.Process(target=worker2, args=(queue1,queue2,event_quit,))
+    p2 = multiprocessing.Process(target= worker2, args=(queue_a, queue_b, event_quit,))
     p2.start()
 
-    p3 = multiprocessing.Process(target=worker3, args=(raw_arr,e,width,height,event_quit,))
+    p3 = multiprocessing.Process(target= worker3, args=(array_a, width, height, event_array_updated, event_quit,))
     p3.start()
 
     while True:
 
 
-        inp = input("Press <ENTER> for next image or press END")
+        inp = input("Press <ENTER> for next image or type END")
 
-        if inp == "END" or img_counter == num_images.value:
+        if inp == "END" or hit_counter == num_images.value:
 
             event_quit.set()
 
             break
 
+        if hit_counter == 0:
 
-        arr = queue2.get()
-        arr = list(arr.flatten())
+            event_start.set()
 
-        raw_arr[:len(arr)] = arr
+        event_start.set()
 
-        img_counter += 1
+        img = queue_b.get()
+        arr = list(img.flatten())
 
-        e.set()
+        array_a[:len(arr)] = arr
+
+        hit_counter += 1
+
+        event_array_updated.set()
 
     # Wait for the worker to finish
-    queue1.close()
-    queue1.join_thread()
+    queue_a.close()
+    queue_a.join_thread()
     p1.join()
 
-    queue2.close()
-    queue2.join_thread()
+    queue_b.close()
+    queue_b.join_thread()
     p2.join()
 
     p3.join()
