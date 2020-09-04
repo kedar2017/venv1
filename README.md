@@ -40,7 +40,10 @@ def worker1(queue_a, width, height, num_images):
         color = color_chart[random.randrange(1, len(color_chart))]
         img = np.zeros([height.value, width.value, 3], dtype=np.uint8)
         img[:, :] = color
-        queue_a.put(img)
+        queue_a.put(img, block=False)
+
+
+    queue_a.put(None)
 
     return
 ```
@@ -62,9 +65,9 @@ def worker2(queue_a,queue_b,event_quit):
 
             break
 
-        if not queue_a.empty():
+        img = queue_a.get()
 
-            img = queue_a.get()
+        if img is not None:
 
             complement_color = complement(img[0,0][0], img[0,0][1], img[0,0][2])
             center_coordi = (len(img[0])//2, len(img)//2)
@@ -73,9 +76,16 @@ def worker2(queue_a,queue_b,event_quit):
             cv2.putText(img, color_map[(img[0,0][0], img[0,0][1], img[0,0][2])], (0, len(img[0])//8),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, complement_color, 2)
 
-            queue_b.put(img)
+            queue_b.put(img, block=False)
+
+        else:
+
+            queue_b.put(None, block=False)
+
+            break
 
     return
+
 ```
 
 1. If the **queueA** is filled with even a single element, this process picks it up
@@ -90,6 +100,7 @@ def worker2(queue_a,queue_b,event_quit):
 **Process# 3**
 
 ```python
+
 def worker3(array_a, width, height, event_array_updated, event_quit):
 
     while True:
@@ -115,17 +126,43 @@ def worker3(array_a, width, height, event_array_updated, event_quit):
 3. The resulting image is then displayed using PIL function ***Image.fromarray()***
 4. Note that even this function checks for **event_quit** signal from the main application to stop all the processes and exit
 
+**Force Exit**
+
+```python
+
+def force_exit(queue_a, queue_b, p1, p2, p3):
+
+    queue_a.close()
+    queue_a.join_thread()
+    queue_b.close()
+    queue_b.join_thread()
+
+    p1.join()
+    p2.join()
+    p3.join()
+
+    sys.exit(0)
+
+```
 
 **Main Application**
 
 
 
-1. Here we first initialize all the necessary variables and start the processes. Below code follows after that
+1. We first initialize all the necessary variables and start the processes. Below code follows after that
 
 ```python
 
     while True:
 
+        img = queue_b.get()
+
+        arr = list(img.flatten())
+        array_a[:len(arr)] = arr
+
+        hit_counter += 1
+
+        event_array_updated.set()
 
         inp = input("Press <ENTER> for next image or type END")
 
@@ -133,21 +170,13 @@ def worker3(array_a, width, height, event_array_updated, event_quit):
 
             event_quit.set()
 
-            while not queue_b.empty():
+            while True:
 
-               a = queue_b.get()
+                if queue_b.get() is None:
 
-            break
+                    force_exit(queue_a, queue_b, p1, p2, p3)
 
-        event_start.set()
 
-        img = queue_b.get()
-        arr = list(img.flatten())
-        array_a[:len(arr)] = arr
-
-        hit_counter += 1
-
-        event_array_updated.set()
 ```
 
 2. Since we have already started the processes, the **process# 1** has already started generating the images and putting them onto the **queueA**

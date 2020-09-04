@@ -129,7 +129,10 @@ def worker1(queue_a, width, height, num_images):
         color = color_chart[random.randrange(1, len(color_chart))]
         img = np.zeros([height.value, width.value, 3], dtype=np.uint8)
         img[:, :] = color
-        queue_a.put(img)
+        queue_a.put(img, block=False)
+
+
+    queue_a.put(None)
 
     return
 
@@ -151,9 +154,9 @@ def worker2(queue_a,queue_b,event_quit):
 
             break
 
-        if not queue_a.empty():
+        img = queue_a.get()
 
-            img = queue_a.get()
+        if img is not None:
 
             complement_color = complement(img[0,0][0], img[0,0][1], img[0,0][2])
             center_coordi = (len(img[0])//2, len(img)//2)
@@ -162,7 +165,13 @@ def worker2(queue_a,queue_b,event_quit):
             cv2.putText(img, color_map[(img[0,0][0], img[0,0][1], img[0,0][2])], (0, len(img[0])//8),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, complement_color, 2)
 
-            queue_b.put(img)
+            queue_b.put(img, block=False)
+
+        else:
+
+            queue_b.put(None, block=False)
+
+            break
 
     return
 
@@ -195,6 +204,32 @@ def worker3(array_a, width, height, event_array_updated, event_quit):
 
     return
 
+
+def force_exit(queue_a, queue_b, p1, p2, p3):
+
+    '''
+
+    This function asks the program to force quit by joining all the processes and close the queues
+    :param queue_a:
+    :param queue_b:
+    :param p1:
+    :param p2:
+    :param p3:
+    :return:
+    '''
+
+    queue_a.close()
+    queue_a.join_thread()
+    queue_b.close()
+    queue_b.join_thread()
+
+    p1.join()
+    p2.join()
+    p3.join()
+
+    sys.exit(0)
+
+
 if __name__ == '__main__':
 
     queue_a = multiprocessing.Queue()
@@ -213,7 +248,6 @@ if __name__ == '__main__':
 
     event_array_updated = multiprocessing.Event()
     event_quit = multiprocessing.Event()
-    event_start = multiprocessing.Event()
 
     p1 = multiprocessing.Process(target= worker1, args=(queue_a, width, height, num_images,))
     p1.start()
@@ -221,27 +255,14 @@ if __name__ == '__main__':
     p2 = multiprocessing.Process(target= worker2, args=(queue_a, queue_b, event_quit,))
     p2.start()
 
-    p3 = multiprocessing.Process(target= worker3, args=(array_a, width, height, event_array_updated, event_quit,))
+    p3 = multiprocessing.Process(target= worker3, args=(array_a, width, height, event_array_updated, event_quit, ))
     p3.start()
+
 
     while True:
 
-
-        inp = input("Press <ENTER> for next image or type END")
-
-        if inp == "END" or hit_counter == num_images.value:
-
-            event_quit.set()
-
-            while not queue_b.empty():
-
-                a = queue_b.get()
-
-            break
-
-        event_start.set()
-
         img = queue_b.get()
+
         arr = list(img.flatten())
         array_a[:len(arr)] = arr
 
@@ -249,17 +270,15 @@ if __name__ == '__main__':
 
         event_array_updated.set()
 
-    # Wait for the worker to finish
-    queue_a.close()
-    queue_a.join_thread()
-    p1.join()
+        inp = input("Press <ENTER> for next image or type END")
 
-    queue_b.close()
-    queue_b.join_thread()
+        if inp == "END" or hit_counter == num_images.value:
 
-    p2.join()
+            event_quit.set()
 
-    p3.join()
+            while True:
 
-    sys.exit(0)
+                if queue_b.get() is None:
+
+                    force_exit(queue_a, queue_b, p1, p2, p3)
 
